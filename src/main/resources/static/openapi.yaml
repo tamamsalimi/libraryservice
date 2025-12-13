@@ -1,0 +1,263 @@
+openapi: 3.0.3
+
+info:
+  title: Library Management Service API
+  description: |
+    API documentation for Library Management System.
+
+    **Security**
+    - ADMIN: manage books and members
+    - MEMBER: borrow and return books
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+security:
+  - basicAuth: []
+
+tags:
+  - name: Books
+    description: Book management (ADMIN only)
+  - name: Members
+    description: Member management (ADMIN only)
+  - name: Loans
+    description: Loan operations (MEMBER only)
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+
+    # ---------- BOOK ----------
+
+    CreateBookRequest:
+      type: object
+      required: [title, author, isbn, totalCopies]
+      properties:
+        title:
+          type: string
+          example: Clean Code
+        author:
+          type: string
+          example: Robert C. Martin
+        isbn:
+          type: string
+          example: "9780132350884"
+        totalCopies:
+          type: integer
+          example: 5
+
+    BookResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string
+        totalCopies:
+          type: integer
+        availableCopies:
+          type: integer
+
+    # ---------- MEMBER ----------
+
+    CreateMemberRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john.doe@email.com
+
+    MemberResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        name:
+          type: string
+        email:
+          type: string
+
+    # ---------- LOAN ----------
+
+    BorrowLoanResponse:
+      type: object
+      properties:
+        loanId:
+          type: integer
+          example: 100
+        bookId:
+          type: integer
+          example: 1
+        memberId:
+          type: integer
+          example: 10
+        borrowedAt:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date-time
+
+    ReturnLoanResponse:
+      type: object
+      properties:
+        loanId:
+          type: integer
+          example: 100
+        returnedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          example: RETURNED
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: BAD_REQUEST
+        message:
+          type: string
+          example: Max active loans exceeded
+
+paths:
+
+  # ---------- BOOK ----------
+
+  /api/books:
+    post:
+      tags: [Books]
+      summary: Create a new book
+      description: Create a new book in the library (ADMIN only).
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '201':
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '400':
+          description: Validation error
+        '403':
+          description: Forbidden (not ADMIN)
+
+  /api/members:
+    post:
+      tags: [Members]
+      summary: Register new member
+      description: Register a new library member (ADMIN only).
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMemberRequest'
+      responses:
+        '201':
+          description: Member registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '400':
+          description: Validation error
+        '403':
+          description: Forbidden (not ADMIN)
+
+  # ---------- LOAN ----------
+
+  /api/loans/borrow:
+    post:
+      tags: [Loans]
+      summary: Borrow a book
+      description: Borrow a book from the library (MEMBER only).
+      operationId: borrowBook
+      parameters:
+        - name: bookId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Book borrowed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BorrowLoanResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (not MEMBER)
+        '404':
+          description: Book or member not found
+
+  /api/loans/return:
+    post:
+      tags: [Loans]
+      summary: Return a book
+      description: Return a borrowed book (MEMBER only).
+      operationId: returnBook
+      parameters:
+        - name: bookId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Book returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnLoanResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (not MEMBER)
+        '404':
+          description: Loan not found

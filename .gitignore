@@ -1,0 +1,74 @@
+# =========================
+# Java
+# =========================
+*.class
+*.log
+
+# =========================
+# Maven
+# =========================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+dependency-reduced-pom.xml
+.buildNumber
+.mvn/timing.properties
+
+# =========================
+# Spring Boot
+# =========================
+*.pid
+*.pid.lock
+
+# =========================
+# IDEs
+# =========================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+application-local.yml
+application-local.yaml
+application-dev.yml
+application-dev.yaml
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Test & Coverage
+# =========================
+/coverage
+/.nyc_output
