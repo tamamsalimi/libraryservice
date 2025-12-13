@@ -1,6 +1,7 @@
 package com.library.managementservice.service;
 
 import com.library.managementservice.api.dto.BorrowLoanResponse;
+import com.library.managementservice.api.dto.LoanDetailResponse;
 import com.library.managementservice.api.dto.ReturnLoanResponse;
 import com.library.managementservice.config.LibraryRulesConfig;
 import com.library.managementservice.entity.Book;
@@ -12,10 +13,12 @@ import com.library.managementservice.repository.MemberRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Service
 public class LoanService {
@@ -24,28 +27,28 @@ public class LoanService {
             LoggerFactory.getLogger(LoanService.class);
 
     private final BookRepository bookRepository;
-    private final MemberRepository memberRepository;
     private final LoanRepository loanRepository;
     private final LibraryRulesConfig rules;
+    private final UserService userService;
 
     public LoanService(
             BookRepository bookRepository,
-            MemberRepository memberRepository,
             LoanRepository loanRepository,
-            LibraryRulesConfig rules
+            LibraryRulesConfig rules, UserService userService
     ) {
         this.bookRepository = bookRepository;
-        this.memberRepository = memberRepository;
         this.loanRepository = loanRepository;
         this.rules = rules;
+        this.userService = userService;
     }
 
     // ---------------- BORROW ----------------
 
     @Transactional
-    public BorrowLoanResponse borrowBook(Long bookId, Long memberId) {
+    public BorrowLoanResponse borrowBook(Long bookId, Authentication authentication) {
         OffsetDateTime now = OffsetDateTime.now();
-
+        Member member = userService.getCurrentMember(authentication);
+        Long memberId = member.getId();
         log.info("Borrow request started: bookId={}, memberId={}", bookId, memberId);
 
         // 1. Load & lock book
@@ -53,13 +56,6 @@ public class LoanService {
                 .orElseThrow(() -> {
                     log.warn("Borrow failed - book not found: bookId={}", bookId);
                     return new IllegalArgumentException("Book not found");
-                });
-
-        // 2. Load member
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> {
-                    log.warn("Borrow failed - member not found: memberId={}", memberId);
-                    return new IllegalArgumentException("Member not found");
                 });
 
         // 3. Rule: max active loans
@@ -117,7 +113,9 @@ public class LoanService {
     // ---------------- RETURN ----------------
 
     @Transactional
-    public ReturnLoanResponse returnBook(Long bookId, Long memberId) {
+    public ReturnLoanResponse returnBook(Long bookId, Authentication authentication) {
+        Member member = userService.getCurrentMember(authentication);
+        Long memberId = member.getId();
         OffsetDateTime now = OffsetDateTime.now();
         log.info("Return request started: bookId={}, memberId={}", bookId, memberId);
 
@@ -151,4 +149,23 @@ public class LoanService {
                 "RETURNED"
         );
     }
+
+    @Transactional(readOnly = true)
+    public List<LoanDetailResponse> getLoansForCurrentMember(
+            Authentication authentication
+    ) {
+        Member member = userService.getCurrentMember(authentication);
+        return loanRepository.findActiveLoansByMember(member.getId())
+                .stream()
+                .map(l -> new LoanDetailResponse(
+                        l.getId(),
+                        l.getBook().getId(),
+                        l.getBook().getTitle(),
+                        l.getBorrowedAt(),
+                        l.getDueDate(),
+                        l.getReturnedAt()
+                ))
+                .toList();
+    }
+
 }

@@ -6,14 +6,16 @@ spring:
     username: library
     password: library
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
+
 
   web:
     resources:

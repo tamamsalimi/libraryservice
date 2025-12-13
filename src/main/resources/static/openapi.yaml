@@ -107,6 +107,9 @@ components:
           type: string
         email:
           type: string
+        activeLoans:
+          type: integer
+          example: 2
 
     # ---------- LOAN ----------
 
@@ -151,6 +154,27 @@ components:
         message:
           type: string
           example: Max active loans exceeded
+
+    LoanDetailResponse:
+      type: object
+      properties:
+        loanId:
+          type: integer
+        bookId:
+          type: integer
+        bookTitle:
+          type: string
+        borrowedAt:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date-time
+        returnedAt:
+          type: string
+          format: date-time
+          nullable: true
+
 
 paths:
 
@@ -282,6 +306,7 @@ paths:
           description: Validation error
         '403':
           description: Forbidden (not ADMIN)
+
   /api/members/{id}:
     get:
       tags: [Members]
@@ -304,6 +329,30 @@ paths:
                 $ref: '#/components/schemas/MemberResponse'
         '404':
           description: Member not found
+
+  /api/members/{id}/loans:
+    get:
+      tags: [ Members ]
+      summary: Get member loan details
+      description: Get all loans (active and returned) for a member (ADMIN only).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of member loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanDetailResponse'
+        '404':
+          description: Member not found
+
 
   # ---------- LOAN ----------
 

@@ -39,24 +39,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
 
                 )
-
                 .httpBasic(Customizer.withDefaults());
-
         return http.build();
-    }
-
-    @Bean
-    UserDetailsService users() {
-        UserDetails admin = User.withUsername("admin")
-                .password("{noop}admin123")
-                .roles("ADMIN")
-                .build();
-
-        UserDetails member = User.withUsername("member")
-                .password("{noop}member123")
-                .roles("MEMBER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, member);
     }
 }
