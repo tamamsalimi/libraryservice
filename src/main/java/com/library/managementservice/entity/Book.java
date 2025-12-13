@@ -100,4 +100,18 @@ public class Book {
             this.availableCopies++;
         }
     }
+
+    public void update(String title, String author, int totalCopies) {
+        if (totalCopies < this.totalCopies - this.availableCopies) {
+            throw new IllegalStateException("Total copies cannot be less than borrowed copies");
+        }
+
+        this.title = title;
+        this.author = author;
+
+        int borrowed = this.totalCopies - this.availableCopies;
+        this.totalCopies = totalCopies;
+        this.availableCopies = totalCopies - borrowed;
+    }
+
 }

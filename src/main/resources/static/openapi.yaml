@@ -52,6 +52,20 @@ components:
           type: integer
           example: 5
 
+    UpdateBookRequest:
+      type: object
+      required: [title, author, totalCopies]
+      properties:
+        title:
+          type: string
+          example: Clean Code (Updated)
+        author:
+          type: string
+          example: Robert C. Martin
+        totalCopies:
+          type: integer
+          example: 10
+
     BookResponse:
       type: object
       properties:
@@ -166,6 +180,85 @@ paths:
         '403':
           description: Forbidden (not ADMIN)
 
+    get:
+      tags: [Books]
+      summary: Search books
+      description: Search books by title or author (ADMIN only).
+      operationId: searchBooks
+      parameters:
+        - name: title
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: author
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookResponse'
+
+  /api/books/{id}:
+    get:
+      tags: [Books]
+      summary: Get book by id
+      description: Get book details by id (ADMIN only).
+      operationId: getBookById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Book found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '404':
+          description: Book not found
+
+    put:
+      tags: [Books]
+      summary: Update book
+      description: Update book details (ADMIN only).
+      operationId: updateBook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+      responses:
+        '200':
+          description: Book updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Book not found
+
+  # ---------- MEMBER ----------
+
   /api/members:
     post:
       tags: [Members]
@@ -189,6 +282,28 @@ paths:
           description: Validation error
         '403':
           description: Forbidden (not ADMIN)
+  /api/members/{id}:
+    get:
+      tags: [Members]
+      summary: Get member by id
+      description: Get member details by id (ADMIN only).
+      operationId: getMemberById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 10
+      responses:
+        '200':
+          description: Member found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '404':
+          description: Member not found
 
   # ---------- LOAN ----------
 
