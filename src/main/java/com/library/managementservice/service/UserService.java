@@ -6,6 +6,7 @@ import com.library.managementservice.entity.Member;
 import com.library.managementservice.entity.User;
 import com.library.managementservice.repository.MemberRepository;
 import com.library.managementservice.repository.UserRepository;
+import com.library.managementservice.utils.Constants;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,45 +39,36 @@ public class UserService {
 
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest req) {
-
         log.info("Create user requested, username={}, role={}",
                 req.username(), req.role());
-
         if (userRepository.findByUsername(req.username()).isPresent()) {
             log.warn("Create user failed: username already exists, username={}",
                     req.username());
             throw new IllegalStateException("Username already exists");
         }
-
         User user = new User();
         user.setUsername(req.username());
         user.setPassword(passwordEncoder.encode(req.password()));
-        user.setRole(req.role());
+        user.setRole(req.role().toUpperCase());
 
         Member member = null;
-        if ("MEMBER".equals(req.role())) {
-
+        if (Constants.ROLE_MEMBER.equalsIgnoreCase(req.role())) {
             if (req.memberId() == null) {
                 log.warn("Create user failed: memberId missing for MEMBER role, username={}",
                         req.username());
                 throw new IllegalArgumentException("memberId is required for MEMBER role");
             }
-
             member = memberRepository.findById(req.memberId())
                     .orElseThrow(() -> {
                         log.warn("Create user failed: member not found, memberId={}, username={}",
                                 req.memberId(), req.username());
                         return new IllegalArgumentException("Member not found");
                     });
-
             user.setMember(member);
         }
-
         userRepository.save(user);
-
         log.info("User created successfully, userId={}, username={}, role={}",
                 user.getId(), user.getUsername(), user.getRole());
-
         return new CreateUserResponse(
                 user.getId(),
                 user.getUsername(),
@@ -119,7 +111,6 @@ public class UserService {
 
         return user.getMember();
     }
-
 
 
     @Transactional

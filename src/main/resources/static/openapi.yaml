@@ -22,6 +22,8 @@ tags:
     description: Book management (ADMIN only)
   - name: Members
     description: Member management (ADMIN only)
+  - name: Users
+    description: User management (ADMIN only)
   - name: Loans
     description: Loan operations (MEMBER only)
 
@@ -32,6 +34,49 @@ components:
       scheme: basic
 
   schemas:
+
+    # ---------- USER ----------
+
+    CreateUserRequest:
+      type: object
+      required: [ username, role ]
+      properties:
+        username:
+          type: string
+          example: admin2@library.local
+        password:
+          type: string
+          description: Optional. If not provided, system may generate one.
+          example: secret123
+        role:
+          type: string
+          enum: [ ADMIN, MEMBER ]
+          example: ADMIN
+        memberId:
+          type: integer
+          nullable: true
+          example: 10
+
+    CreateUserResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: admin2@library.local
+        role:
+          type: string
+          example: ADMIN
+        memberId:
+          type: integer
+          nullable: true
+          example: null
+        initialPassword:
+          type: string
+          nullable: true
+          description: Returned only once when auto-generated
 
     # ---------- BOOK ----------
 
@@ -425,3 +470,57 @@ paths:
           description: Forbidden (not MEMBER)
         '404':
           description: Loan not found
+
+  /api/loans/me:
+    get:
+      tags: [ Loans ]
+      summary: Get current member loans
+      description: |
+        Get all loans (active and returned) for the currently authenticated member.
+        Uses authentication context (`/me`), no memberId required.
+        (MEMBER only)
+      operationId: getMyLoans
+      responses:
+        '200':
+          description: List of current member loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanDetailResponse'
+        '403':
+          description: Forbidden (not MEMBER)
+
+  # ---------- USERS ----------
+  /api/users:
+    post:
+      tags: [ Users ]
+      summary: Create user
+      description: |
+        Create a new user account.
+        - ADMIN can create ADMIN or MEMBER users
+        - MEMBER role requires memberId
+        (ADMIN only)
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (not ADMIN)
