@@ -142,13 +142,11 @@ public class UserService {
         );
     }
 
-
     private String generateRandomPassword() {
         return UUID.randomUUID()
                 .toString()
                 .replace("-", "")
                 .substring(0, 10);
     }
-
 
 }
