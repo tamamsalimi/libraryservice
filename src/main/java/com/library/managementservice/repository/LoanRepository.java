@@ -50,4 +50,13 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
           and l.returnedAt is null
     """)
     List<Loan> findActiveLoansByMember(@Param("memberId") Long memberId);
+
+    @Query("""
+    select l
+    from Loan l
+    where l.member.id = :memberId
+    order by l.borrowedAt desc
+""")
+    List<Loan> findLoanHistoryByMember(@Param("memberId") Long memberId);
+
 }

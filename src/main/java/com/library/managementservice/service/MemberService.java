@@ -94,7 +94,7 @@ public class MemberService {
                 });
 
         List<LoanDetailResponse> loans =
-                loanRepository.findActiveLoansByMember(memberId)
+                loanRepository.findLoanHistoryByMember(memberId)
                         .stream()
                         .map(l -> new LoanDetailResponse(
                                 l.getId(),
